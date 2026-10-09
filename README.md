@@ -1,0 +1,2 @@
+# scripthackroblox
+script vip hack

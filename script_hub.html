@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScriptHub — Kho Script</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#fff;border-bottom:1px solid #e7ebf2;position:sticky;top:0;z-index:10}
+.nav{max-width:1180px;margin:auto;padding:18px 22px;display:flex;align-items:center;gap:20px}
+.logo{font-size:22px;font-weight:800;color:#2563eb}.logo span{color:#172033}
+.search{flex:1;max-width:520px;margin:auto;position:relative}.search input{width:100%;padding:12px 16px 12px 42px;border:1px solid #dce2ec;border-radius:12px;outline:none;font-size:15px}.search input:focus{border-color:#6d9cff;box-shadow:0 0 0 4px #eaf1ff}.search b{position:absolute;left:15px;top:11px;color:#8190a8}
+button{border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer}.primary{background:#2563eb;color:#fff}.primary:hover{background:#1d4ed8}
+main{max-width:1180px;margin:0 auto;padding:35px 22px}.hero{background:linear-gradient(135deg,#eaf2ff,#fff);border:1px solid #dce8ff;border-radius:22px;padding:30px;margin-bottom:28px}.hero h1{margin:0 0 8px;font-size:32px}.hero p{margin:0;color:#667085}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}.filter{background:#fff;border:1px solid #dce2ec;color:#526078}.filter.active{background:#2563eb;color:#fff;border-color:#2563eb}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:18px}.card{background:#fff;border:1px solid #e4e8ef;border-radius:17px;padding:20px;box-shadow:0 4px 16px rgba(20,35,70,.04)}.card:hover{box-shadow:0 8px 25px rgba(20,35,70,.09);transform:translateY(-2px);transition:.15s}.tag{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef4ff;color:#2563eb;font-size:12px;font-weight:700}.card h3{margin:14px 0 7px}.card p{color:#69758a;font-size:14px;min-height:38px}.actions{display:flex;gap:8px;margin-top:15px}.secondary{background:#f1f4f8;color:#334155}.danger{background:#fff0f0;color:#dc2626}.empty{text-align:center;color:#7a869a;padding:50px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.42);z-index:30;padding:20px;align-items:center;justify-content:center}.modal{background:#fff;width:min(760px,100%);max-height:90vh;overflow:auto;border-radius:20px;padding:24px}.modal h2{margin-top:0}.row{display:grid;grid-template-columns:1fr 180px;gap:12px}.field{margin-bottom:14px}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field input,.field textarea,.field select{width:100%;border:1px solid #d8deea;border-radius:10px;padding:11px;font:inherit;outline:none}.field textarea{min-height:300px;font-family:Consolas,monospace;resize:vertical}.modal-actions{display:flex;justify-content:flex-end;gap:8px}
+pre{background:#111827;color:#e5e7eb;border-radius:12px;padding:18px;overflow:auto;white-space:pre-wrap;font-family:Consolas,monospace;font-size:13px;line-height:1.55}
+.toast{position:fixed;right:22px;bottom:22px;background:#172033;color:#fff;padding:12px 16px;border-radius:10px;display:none;z-index:50}
+@media(max-width:700px){.nav{flex-wrap:wrap}.search{order:3;flex-basis:100%}.hero h1{font-size:26px}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <div class="logo">Script<span>Hub</span></div>
+    <div class="search"><b>⌕</b><input id="search" placeholder="Tìm script..."></div>
+    <button class="primary" onclick="openAdd()">+ Thêm script</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Kho Script của bạn</h1>
+    <p>Lưu, tìm kiếm và quản lý các script Roblox bạn tự viết.</p>
+  </section>
+
+  <div class="filters" id="filters"></div>
+  <section class="grid" id="grid"></section>
+</main>
+
+<div class="modal-bg" id="editor">
+  <div class="modal">
+    <h2 id="editorTitle">Thêm script</h2>
+    <input type="hidden" id="editId">
+    <div class="row">
+      <div class="field"><label>Tên script</label><input id="name" placeholder="Ví dụ: NPC Follow"></div>
+      <div class="field"><label>Danh mục</label>
+        <select id="category"><option>NPC</option><option>UI</option><option>Admin</option><option>Utility</option><option>Gameplay</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Mô tả</label><input id="desc" placeholder="Mô tả ngắn..."></div>
+    <div class="field"><label>Code Lua</label><textarea id="code" placeholder="Dán code Lua của bạn vào đây..."></textarea></div>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeModal()">Hủy</button>
+      <button class="primary" onclick="saveScript()">Lưu script</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="viewer">
+  <div class="modal">
+    <h2 id="viewTitle"></h2>
+    <p id="viewDesc" style="color:#69758a"></p>
+    <pre id="viewCode"></pre>
+    <div class="modal-actions">
+      <button class="secondary" onclick="closeViewer()">Đóng</button>
+      <button class="primary" onclick="copyCurrent()">Copy code</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const starter=[
+{id:1,name:"NPC Follow",category:"NPC",desc:"NPC tìm và đi theo người chơi gần nhất.",code:`local Players = game:GetService("Players")
+local npc = script.Parent
+local humanoid = npc:WaitForChild("Humanoid")
+
+local function getNearest()
+    local nearest, distance = nil, math.huge
+    for _, player in ipairs(Players:GetPlayers()) do
+        local char = player.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root and npc.PrimaryPart then
+            local d = (root.Position - npc.PrimaryPart.Position).Magnitude
+            if d < distance then
+                nearest, distance = root, d
+            end
+        end
+    end
+    return nearest
+end
+
+while task.wait(0.5) do
+    local target = getNearest()
+    if target then humanoid:MoveTo(target.Position) end
+end`},
+{id:2,name:"Simple UI Button",category:"UI",desc:"Tạo nút UI đơn giản và bắt sự kiện click.",code:`local button = script.Parent
+
+button.MouseButton1Click:Connect(function()
+    print("Button được nhấn!")
+end)`},
+{id:3,name:"Player Speed",category:"Gameplay",desc:"Thiết lập WalkSpeed cho nhân vật trong game của bạn.",code:`local Players = game:GetService("Players")
+
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        local humanoid = character:WaitForChild("Humanoid")
+        humanoid.WalkSpeed = 20
+    end)
+end)`},
+{id:4,name:"Admin Command Demo",category:"Admin",desc:"Ví dụ lệnh quản trị cơ bản cho game của bạn.",code:`local Players = game:GetService("Players")
+local ADMINS = {["YourName"] = true}
+
+Players.PlayerAdded:Connect(function(player)
+    player.Chatted:Connect(function(message)
+        if not ADMINS[player.Name] then return end
+        if message == "!heal" and player.Character then
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.Health = hum.MaxHealth end
+        end
+    end)
+end)`}
+];
+
+let scripts=JSON.parse(localStorage.getItem("scriptHubData")||"null")||starter;
+let active="Tất cả", currentCode="";
+
+function persist(){localStorage.setItem("scriptHubData",JSON.stringify(scripts))}
+function toast(t){const x=document.getElementById("toast");x.textContent=t;x.style.display="block";setTimeout(()=>x.style.display="none",1800)}
+function renderFilters(){
+ const cats=["Tất cả",...new Set(scripts.map(x=>x.category))];
+ document.getElementById("filters").innerHTML=cats.map(c=>`<button class="filter ${c===active?"active":""}" onclick="setFilter('${esc(c)}')">${esc(c)}</button>`).join("");
+}
+function render(){
+ renderFilters();
+ const q=document.getElementById("search").value.toLowerCase();
+ const list=scripts.filter(x=>(active==="Tất cả"||x.category===active)&&
+   (x.name.toLowerCase().includes(q)||x.desc.toLowerCase().includes(q)||x.code.toLowerCase().includes(q)));
+ const grid=document.getElementById("grid");
+ if(!list.length){grid.innerHTML='<div class="empty">Không tìm thấy script phù hợp.</div>';return}
+ grid.innerHTML=list.map(x=>`<article class="card">
+   <span class="tag">${esc(x.category)}</span><h3>${esc(x.name)}</h3><p>${esc(x.desc)}</p>
+   <div class="actions"><button class="primary" onclick="view(${x.id})">Xem code</button>
+   <button class="secondary" onclick="editScript(${x.id})">Sửa</button>
+   <button class="danger" onclick="removeScript(${x.id})">Xóa</button></div>
+ </article>`).join("");
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function setFilter(c){active=c;render()}
+function openAdd(){
+ document.getElementById("editorTitle").textContent="Thêm script";
+ document.getElementById("editId").value="";
+ ["name","desc","code"].forEach(id=>document.getElementById(id).value="");
+ document.getElementById("category").value="NPC";
+ document.getElementById("editor").style.display="flex";
+}
+function editScript(id){
+ const x=scripts.find(s=>s.id===id);if(!x)return;
+ document.getElementById("editorTitle").textContent="Sửa script";
+ document.getElementById("editId").value=id;
+ document.getElementById("name").value=x.name;
+ document.getElementById("desc").value=x.desc;
+ document.getElementById("category").value=x.category;
+ document.getElementById("code").value=x.code;
+ document.getElementById("editor").style.display="flex";
+}
+function closeModal(){document.getElementById("editor").style.display="none"}
+function saveScript(){
+ const name=document.getElementById("name").value.trim(), code=document.getElementById("code").value.trim();
+ if(!name||!code){toast("Vui lòng nhập tên và code");return}
+ const data={id:Number(document.getElementById("editId").value)||Date.now(),name,
+ category:document.getElementById("category").value,desc:document.getElementById("desc").value.trim()||"Không có mô tả.",code};
+ const i=scripts.findIndex(x=>x.id===data.id);
+ if(i>=0)scripts[i]=data;else scripts.unshift(data);
+ persist();closeModal();render();toast("Đã lưu script");
+}
+function removeScript(id){
+ const x=scripts.find(s=>s.id===id);if(!x)return;
+ if(confirm(`Xóa "${x.name}"?`)){scripts=scripts.filter(s=>s.id!==id);persist();render();toast("Đã xóa")}
+}
+function view(id){
+ const x=scripts.find(s=>s.id===id);if(!x)return;
+ currentCode=x.code;document.getElementById("viewTitle").textContent=x.name;
+ document.getElementById("viewDesc").textContent=x.desc;
+ document.getElementById("viewCode").textContent=x.code;
+ document.getElementById("viewer").style.display="flex";
+}
+function closeViewer(){document.getElementById("viewer").style.display="none"}
+async function copyCurrent(){
+ try{await navigator.clipboard.writeText(currentCode);toast("Đã copy code")}
+ catch{toast("Trình duyệt không cho phép copy tự động")}
+}
+document.getElementById("search").addEventListener("input",render);
+render();
+</script>
+</body>
+</html>
